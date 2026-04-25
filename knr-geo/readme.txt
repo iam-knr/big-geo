@@ -2,7 +2,7 @@
 Contributors: knrdigital
 Tags: llms, AI, SEO, robots.txt, generative-engine-optimization
 Requires at least: 5.8
-Tested up to: 6.5
+Tested up to: 6.9
 Stable tag: 1.0.0
 License: GPLv2 or later
 

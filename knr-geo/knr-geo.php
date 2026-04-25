@@ -115,8 +115,9 @@ function big_geo_preview_llms_full_ajax() {
 	
 	$llms_full = new BIG_GEO_LLMS_Full();
 	$content = $llms_full->generate_content();
+    	wp_send_json_success( array( 'content' => $content ) );
+}
 	
-	wp_send_json_success( array( 'content' => $content ) );
 
 
 // Admin assets
