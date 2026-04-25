@@ -25,7 +25,7 @@ require_once BIG_GEO_PLUGIN_DIR . 'includes/class-llms-txt.php';
 require_once BIG_GEO_PLUGIN_DIR . 'includes/class-llms-full.php';
 require_once BIG_GEO_PLUGIN_DIR . 'includes/class-robots-audit.php';
 require_once BIG_GEO_PLUGIN_DIR . 'admin/settings-page.php';
-require_once BIG_GEO_PLUGIN_DIR . 'admin/dashboard-widget.php';
+// require_once BIG_GEO_PLUGIN_DIR . 'admin/dashboard-widget.php';
 
 register_activation_hook( __FILE__, 'big_geo_activate' );
 register_deactivation_hook( __FILE__, 'big_geo_deactivate' );
