@@ -8,27 +8,27 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class KNR_GEO_LLMS_Txt {
+class BIG_GEO_LLMS_Txt {
 
     /**
      * Register the rewrite rule for /llms.txt
      */
     public function register_rewrite() {
-        add_rewrite_rule( '^llms\.txt$', 'index.php?knr_geo_llms_txt=1', 'top' );
+        add_rewrite_rule( '^llms\.txt$', 'index.php?big_geo_llms_txt=1', 'top' );
         add_filter( 'query_vars', array( $this, 'add_query_vars' ) );
         add_action( 'template_redirect', array( $this, 'serve_file' ) );
     }
 
     public function add_query_vars( $vars ) {
-        $vars[] = 'knr_geo_llms_txt';
+        $vars[] = 'big_geo_llms_txt';
         return $vars;
     }
 
     public function serve_file() {
-        if ( ! get_query_var( 'knr_geo_llms_txt' ) ) {
+        if ( ! get_query_var( 'big_geo_llms_txt' ) ) {
             return;
         }
-        if ( get_option( 'knr_geo_llms_txt_enabled', '1' ) !== '1' ) {
+        if ( get_option( 'big_geo_llms_txt_enabled', '1' ) !== '1' ) {
             wp_die( 'llms.txt is disabled.', '', array( 'response' => 404 ) );
         }
         $content = $this->generate();
@@ -44,7 +44,7 @@ class KNR_GEO_LLMS_Txt {
      * @return string
      */
     public function generate() {
-        $cached = get_transient( 'knr_geo_llms_txt_cache' );
+        $cached = get_transient( 'big_geo_llms_txt_cache' );
         if ( false !== $cached ) {
             return $cached;
         }
@@ -53,7 +53,7 @@ class KNR_GEO_LLMS_Txt {
 
         // Site header block
         $site_name = get_bloginfo( 'name' );
-        $site_desc = get_option( 'knr_geo_site_description', '' );
+        $site_desc = get_option( 'big_geo_site_description', '' );
         if ( empty( $site_desc ) ) {
             $site_desc = get_bloginfo( 'description' );
         }
@@ -65,13 +65,13 @@ class KNR_GEO_LLMS_Txt {
         $lines[] = '';
 
         // Get enabled post types
-        $post_types = get_option( 'knr_geo_post_types', array( 'post', 'page' ) );
+        $post_types = get_option( 'big_geo_post_types', array( 'post', 'page' ) );
         if ( ! is_array( $post_types ) ) {
             $post_types = array( 'post', 'page' );
         }
 
         // Get excluded URLs
-        $excluded_raw = get_option( 'knr_geo_excluded_urls', '' );
+        $excluded_raw = get_option( 'big_geo_excluded_urls', '' );
         $excluded_urls = array();
         if ( ! empty( $excluded_raw ) ) {
             $excluded_urls = array_filter( array_map( 'trim', explode( "\n", $excluded_raw ) ) );
@@ -115,7 +115,7 @@ class KNR_GEO_LLMS_Txt {
         }
 
         $content = implode( "\n", $lines );
-        set_transient( 'knr_geo_llms_txt_cache', $content, HOUR_IN_SECONDS );
+        set_transient( 'big_geo_llms_txt_cache', $content, HOUR_IN_SECONDS );
 
         return $content;
     }

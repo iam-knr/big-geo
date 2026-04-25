@@ -7,68 +7,68 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 // Add admin menu
-add_action( 'admin_menu', 'knr_geo_admin_menu' );
-function knr_geo_admin_menu() {
+add_action( 'admin_menu', 'big_geo_admin_menu' );
+function big_geo_admin_menu() {
     add_menu_page(
         'Big GEO Settings',
         'Big GEO',
         'manage_options',
         'knr-geo',
-        'knr_geo_settings_page',
+        'big_geo_settings_page',
         'dashicons-admin-site-alt3',
         80
     );
 }
 
 // Register robots_txt filter if virtual fix is active
-if ( get_option( 'knr_geo_robots_fix_active', '0' ) === '1' ) {
-    add_filter( 'robots_txt', 'KNR_GEO_Robots_Audit::inject_ai_bots_filter', 99, 2 );
+if ( get_option( 'big_geo_robots_fix_active', '0' ) === '1' ) {
+    add_filter( 'robots_txt', 'BIG_GEO_Robots_Audit::inject_ai_bots_filter', 99, 2 );
 }
 
 // Save settings
-add_action( 'admin_init', 'knr_geo_save_settings' );
-function knr_geo_save_settings() {
-    if ( ! isset( $_POST['knr_geo_settings_nonce'] ) ) return;
-    if ( ! wp_verify_nonce( $_POST['knr_geo_settings_nonce'], 'knr_geo_save_settings' ) ) return;
+add_action( 'admin_init', 'big_geo_save_settings' );
+function big_geo_save_settings() {
+    if ( ! isset( $_POST['big_geo_settings_nonce'] ) ) return;
+    if ( ! wp_verify_nonce( $_POST['big_geo_settings_nonce'], 'big_geo_save_settings' ) ) return;
     if ( ! current_user_can( 'manage_options' ) ) return;
 
     // Save general settings
-    if ( isset( $_POST['knr_geo_post_types'] ) ) {
-        update_option( 'knr_geo_post_types', array_map( 'sanitize_text_field', (array) $_POST['knr_geo_post_types'] ) );
+    if ( isset( $_POST['big_geo_post_types'] ) ) {
+        update_option( 'big_geo_post_types', array_map( 'sanitize_text_field', (array) $_POST['big_geo_post_types'] ) );
     } else {
-        update_option( 'knr_geo_post_types', array() );
+        update_option( 'big_geo_post_types', array() );
     }
 
-    if ( isset( $_POST['knr_geo_site_description'] ) ) {
-        update_option( 'knr_geo_site_description', sanitize_textarea_field( $_POST['knr_geo_site_description'] ) );
+    if ( isset( $_POST['big_geo_site_description'] ) ) {
+        update_option( 'big_geo_site_description', sanitize_textarea_field( $_POST['big_geo_site_description'] ) );
     }
 
-    if ( isset( $_POST['knr_geo_excluded_urls'] ) ) {
-        update_option( 'knr_geo_excluded_urls', sanitize_textarea_field( $_POST['knr_geo_excluded_urls'] ) );
+    if ( isset( $_POST['big_geo_excluded_urls'] ) ) {
+        update_option( 'big_geo_excluded_urls', sanitize_textarea_field( $_POST['big_geo_excluded_urls'] ) );
     }
 
-    update_option( 'knr_geo_llms_txt_enabled', isset( $_POST['knr_geo_llms_txt_enabled'] ) ? '1' : '0' );
-    update_option( 'knr_geo_llms_full_enabled', isset( $_POST['knr_geo_llms_full_enabled'] ) ? '1' : '0' );
-    update_option( 'knr_geo_strip_shortcodes', isset( $_POST['knr_geo_strip_shortcodes'] ) ? '1' : '0' );
+    update_option( 'big_geo_llms_txt_enabled', isset( $_POST['big_geo_llms_txt_enabled'] ) ? '1' : '0' );
+    update_option( 'big_geo_llms_full_enabled', isset( $_POST['big_geo_llms_full_enabled'] ) ? '1' : '0' );
+    update_option( 'big_geo_strip_shortcodes', isset( $_POST['big_geo_strip_shortcodes'] ) ? '1' : '0' );
 
-    if ( isset( $_POST['knr_geo_custom_robots_url'] ) ) {
-        update_option( 'knr_geo_custom_robots_url', esc_url_raw( $_POST['knr_geo_custom_robots_url'] ) );
+    if ( isset( $_POST['big_geo_custom_robots_url'] ) ) {
+        update_option( 'big_geo_custom_robots_url', esc_url_raw( $_POST['big_geo_custom_robots_url'] ) );
     }
 
-    delete_transient( 'knr_geo_llms_txt_cache' );
-    delete_transient( 'knr_geo_llms_full_cache' );
+    delete_transient( 'big_geo_llms_txt_cache' );
+    delete_transient( 'big_geo_llms_full_cache' );
 
-    add_settings_error( 'knr_geo_messages', 'knr_geo_message', 'Settings saved successfully.', 'success' );
+    add_settings_error( 'big_geo_messages', 'big_geo_message', 'Settings saved successfully.', 'success' );
 }
 
 // Settings page UI
-function knr_geo_settings_page() {
-    $audit = new KNR_GEO_Robots_Audit();
-    $llms  = new KNR_GEO_LLMS_Txt();
+function big_geo_settings_page() {
+    $audit = new BIG_GEO_Robots_Audit();
+    $llms  = new BIG_GEO_LLMS_Txt();
     ?>
-    <div class="wrap knr-geo-settings">
+    <div class="wrap big-geo-settings">
         <h1><span class="dashicons dashicons-admin-site-alt3"></span> Big GEO Settings</h1>
-        <?php settings_errors( 'knr_geo_messages' ); ?>
+        <?php settings_errors( 'big_geo_messages' ); ?>
 
         <nav class="nav-tab-wrapper">
             <a href="#tab-dashboard" class="nav-tab nav-tab-active">Dashboard</a>
@@ -81,18 +81,18 @@ function knr_geo_settings_page() {
             <!-- Dashboard Tab -->
             <div id="tab-dashboard" class="tab-pane active">
                 <h2>Big GEO Overview</h2>
-                <div class="knr-geo-cards">
-                    <div class="knr-geo-card">
+                <div class="big-geo-cards">
+                    <div class="big-geo-card">
                         <h3>llms.txt</h3>
-                        <p><strong>Status:</strong> <?php echo get_option( 'knr_geo_llms_txt_enabled', '1' ) === '1' ? '✅ Active' : '❌ Inactive'; ?></p>
+                        <p><strong>Status:</strong> <?php echo get_option( 'big_geo_llms_txt_enabled', '1' ) === '1' ? '✅ Active' : '❌ Inactive'; ?></p>
                         <p><a href="<?php echo home_url( '/llms.txt' ); ?>" target="_blank">View llms.txt →</a></p>
                     </div>
-                    <div class="knr-geo-card">
+                    <div class="big-geo-card">
                         <h3>llms-full.txt</h3>
-                        <p><strong>Status:</strong> <?php echo get_option( 'knr_geo_llms_full_enabled', '0' ) === '1' ? '✅ Active' : '❌ Inactive'; ?></p>
+                        <p><strong>Status:</strong> <?php echo get_option( 'big_geo_llms_full_enabled', '0' ) === '1' ? '✅ Active' : '❌ Inactive'; ?></p>
                         <p><a href="<?php echo home_url( '/llms-full.txt' ); ?>" target="_blank">View llms-full.txt →</a></p>
                     </div>
-                    <div class="knr-geo-card">
+                    <div class="big-geo-card">
                         <h3>AI Crawler Audit</h3>
                         <?php
                         $results = $audit->run_audit();
@@ -111,12 +111,12 @@ function knr_geo_settings_page() {
             <div id="tab-llms-txt" class="tab-pane">
                 <h2>llms.txt Generator</h2>
                 <form method="post">
-                    <?php wp_nonce_field( 'knr_geo_save_settings', 'knr_geo_settings_nonce' ); ?>
+                    <?php wp_nonce_field( 'big_geo_save_settings', 'big_geo_settings_nonce' ); ?>
                     <table class="form-table">
                         <tr>
                             <th>Enable llms.txt</th>
                             <td>
-                                <label><input type="checkbox" name="knr_geo_llms_txt_enabled" <?php checked( get_option( 'knr_geo_llms_txt_enabled', '1' ), '1' ); ?>> Enable</label>
+                                <label><input type="checkbox" name="big_geo_llms_txt_enabled" <?php checked( get_option( 'big_geo_llms_txt_enabled', '1' ), '1' ); ?>> Enable</label>
                             </td>
                         </tr>
                         <tr>
@@ -124,10 +124,10 @@ function knr_geo_settings_page() {
                             <td>
                                 <?php
                                 $pt_types = get_post_types( array( 'public' => true ), 'objects' );
-                                $selected = get_option( 'knr_geo_post_types', array( 'post', 'page' ) );
+                                $selected = get_option( 'big_geo_post_types', array( 'post', 'page' ) );
                                 foreach ( $pt_types as $pt ) {
                                     $checked = in_array( $pt->name, $selected, true );
-                                    echo '<label style="display:block;"><input type="checkbox" name="knr_geo_post_types[]" value="' . esc_attr( $pt->name ) . '" ' . checked( $checked, true, false ) . '> ' . esc_html( $pt->labels->name ) . '</label>';
+                                    echo '<label style="display:block;"><input type="checkbox" name="big_geo_post_types[]" value="' . esc_attr( $pt->name ) . '" ' . checked( $checked, true, false ) . '> ' . esc_html( $pt->labels->name ) . '</label>';
                                 }
                                 ?>
                             </td>
@@ -135,14 +135,14 @@ function knr_geo_settings_page() {
                         <tr>
                             <th>Site Description</th>
                             <td>
-                                <textarea name="knr_geo_site_description" rows="3" class="large-text"><?php echo esc_textarea( get_option( 'knr_geo_site_description', '' ) ); ?></textarea>
+                                <textarea name="big_geo_site_description" rows="3" class="large-text"><?php echo esc_textarea( get_option( 'big_geo_site_description', '' ) ); ?></textarea>
                                 <p class="description">Appears at the top of llms.txt. Leave empty to use tagline.</p>
                             </td>
                         </tr>
                         <tr>
                             <th>Excluded URLs</th>
                             <td>
-                                <textarea name="knr_geo_excluded_urls" rows="5" class="large-text"><?php echo esc_textarea( get_option( 'knr_geo_excluded_urls', '' ) ); ?></textarea>
+                                <textarea name="big_geo_excluded_urls" rows="5" class="large-text"><?php echo esc_textarea( get_option( 'big_geo_excluded_urls', '' ) ); ?></textarea>
                                 <p class="description">One URL per line. These posts will be excluded from llms.txt.</p>
                             </td>
                         </tr>
@@ -151,27 +151,27 @@ function knr_geo_settings_page() {
                 </form>
 
                 <h3>Preview llms.txt</h3>
-                <button type="button" id="knr-geo-preview-llms" class="button">Load Preview</button>
-                <textarea id="knr-geo-llms-preview" class="large-text code" rows="15" readonly></textarea>
+                <button type="button" id="big-geo-preview-llms" class="button">Load Preview</button>
+                <textarea id="big-geo-llms-preview" class="large-text code" rows="15" readonly></textarea>
             </div>
 
             <!-- llms-full.txt Tab -->
             <div id="tab-llms-full" class="tab-pane">
                 <h2>llms-full.txt Generator</h2>
                 <form method="post">
-                    <?php wp_nonce_field( 'knr_geo_save_settings', 'knr_geo_settings_nonce' ); ?>
+                    <?php wp_nonce_field( 'big_geo_save_settings', 'big_geo_settings_nonce' ); ?>
                     <table class="form-table">
                         <tr>
                             <th>Enable llms-full.txt</th>
                             <td>
-                                <label><input type="checkbox" name="knr_geo_llms_full_enabled" <?php checked( get_option( 'knr_geo_llms_full_enabled', '0' ), '1' ); ?>> Enable</label>
+                                <label><input type="checkbox" name="big_geo_llms_full_enabled" <?php checked( get_option( 'big_geo_llms_full_enabled', '0' ), '1' ); ?>> Enable</label>
                                 <p class="description">⚠️ This exposes full post content. Use with caution.</p>
                             </td>
                         </tr>
                         <tr>
                             <th>Strip Shortcodes</th>
                             <td>
-                                <label><input type="checkbox" name="knr_geo_strip_shortcodes" <?php checked( get_option( 'knr_geo_strip_shortcodes', '1' ), '1' ); ?>> Strip shortcodes from output</label>
+                                <label><input type="checkbox" name="big_geo_strip_shortcodes" <?php checked( get_option( 'big_geo_strip_shortcodes', '1' ), '1' ); ?>> Strip shortcodes from output</label>
                             </td>
                         </tr>
                     </table>
@@ -182,14 +182,14 @@ function knr_geo_settings_page() {
             <!-- Robots Audit Tab -->
             <div id="tab-robots" class="tab-pane">
                 <h2>AI Crawler Audit & Fix</h2>
-                <button type="button" id="knr-geo-run-audit" class="button button-primary">Run Audit Now</button>
-                <div id="knr-geo-audit-results" style="margin-top:20px;"></div>
+                <button type="button" id="big-geo-run-audit" class="button button-primary">Run Audit Now</button>
+                <div id="big-geo-audit-results" style="margin-top:20px;"></div>
 
                 <h3>Custom robots.txt URL (Optional)</h3>
                 <form method="post">
-                    <?php wp_nonce_field( 'knr_geo_save_settings', 'knr_geo_settings_nonce' ); ?>
+                    <?php wp_nonce_field( 'big_geo_save_settings', 'big_geo_settings_nonce' ); ?>
                     <p>
-                        <input type="url" name="knr_geo_custom_robots_url" value="<?php echo esc_attr( get_option( 'knr_geo_custom_robots_url', '' ) ); ?>" class="regular-text" placeholder="https://example.com/custom-robots.txt">
+                        <input type="url" name="big_geo_custom_robots_url" value="<?php echo esc_attr( get_option( 'big_geo_custom_robots_url', '' ) ); ?>" class="regular-text" placeholder="https://example.com/custom-robots.txt">
                         <?php submit_button( 'Save', 'secondary', 'submit', false ); ?>
                     </p>
                 </form>

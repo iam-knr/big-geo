@@ -8,24 +8,24 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class KNR_GEO_LLMS_Full {
+class BIG_GEO_LLMS_Full {
 
     public function register_rewrite() {
-        add_rewrite_rule( '^llms-full\.txt$', 'index.php?knr_geo_llms_full=1', 'top' );
+        add_rewrite_rule( '^llms-full\.txt$', 'index.php?big_geo_llms_full=1', 'top' );
         add_filter( 'query_vars', array( $this, 'add_query_vars' ) );
         add_action( 'template_redirect', array( $this, 'serve_file' ) );
     }
 
     public function add_query_vars( $vars ) {
-        $vars[] = 'knr_geo_llms_full';
+        $vars[] = 'big_geo_llms_full';
         return $vars;
     }
 
     public function serve_file() {
-        if ( ! get_query_var( 'knr_geo_llms_full' ) ) {
+        if ( ! get_query_var( 'big_geo_llms_full' ) ) {
             return;
         }
-        if ( get_option( 'knr_geo_llms_full_enabled', '0' ) !== '1' ) {
+        if ( get_option( 'big_geo_llms_full_enabled', '0' ) !== '1' ) {
             wp_die( 'llms-full.txt is disabled.', '', array( 'response' => 404 ) );
         }
         $content = $this->generate();
@@ -41,7 +41,7 @@ class KNR_GEO_LLMS_Full {
      * @return string
      */
     public function generate() {
-        $cached = get_transient( 'knr_geo_llms_full_cache' );
+        $cached = get_transient( 'big_geo_llms_full_cache' );
         if ( false !== $cached ) {
             return $cached;
         }
@@ -49,7 +49,7 @@ class KNR_GEO_LLMS_Full {
         $lines = array();
 
         $site_name = get_bloginfo( 'name' );
-        $site_desc = get_option( 'knr_geo_site_description', '' );
+        $site_desc = get_option( 'big_geo_site_description', '' );
         if ( empty( $site_desc ) ) {
             $site_desc = get_bloginfo( 'description' );
         }
@@ -60,12 +60,12 @@ class KNR_GEO_LLMS_Full {
         }
         $lines[] = '';
 
-        $post_types = get_option( 'knr_geo_post_types', array( 'post', 'page' ) );
+        $post_types = get_option( 'big_geo_post_types', array( 'post', 'page' ) );
         if ( ! is_array( $post_types ) ) {
             $post_types = array( 'post', 'page' );
         }
 
-        $strip_shortcodes = get_option( 'knr_geo_strip_shortcodes', '1' ) === '1';
+        $strip_shortcodes = get_option( 'big_geo_strip_shortcodes', '1' ) === '1';
 
         foreach ( $post_types as $post_type ) {
             $posts = get_posts( array(
@@ -117,7 +117,7 @@ class KNR_GEO_LLMS_Full {
         }
 
         $output = implode( "\n", $lines );
-        set_transient( 'knr_geo_llms_full_cache', $output, HOUR_IN_SECONDS );
+        set_transient( 'big_geo_llms_full_cache', $output, HOUR_IN_SECONDS );
 
         return $output;
     }

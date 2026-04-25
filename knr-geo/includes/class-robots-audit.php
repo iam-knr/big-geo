@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-class KNR_GEO_Robots_Audit {
+class BIG_GEO_Robots_Audit {
 
     /**
      * Known AI bots to audit
@@ -28,7 +28,7 @@ class KNR_GEO_Robots_Audit {
      * @return string  'virtual' | 'physical' | 'custom'
      */
     public function detect_tier() {
-        $custom_url = get_option( 'knr_geo_custom_robots_url', '' );
+        $custom_url = get_option( 'big_geo_custom_robots_url', '' );
         if ( ! empty( $custom_url ) ) {
             return 'custom';
         }
@@ -92,7 +92,7 @@ class KNR_GEO_Robots_Audit {
         }
 
         if ( $tier === 'custom' ) {
-            $url = get_option( 'knr_geo_custom_robots_url', '' );
+            $url = get_option( 'big_geo_custom_robots_url', '' );
             if ( empty( $url ) ) return '';
             $response = wp_remote_get( $url, array( 'timeout' => 10 ) );
             if ( is_wp_error( $response ) ) return '';
@@ -151,7 +151,7 @@ class KNR_GEO_Robots_Audit {
      * @return array
      */
     public function apply_virtual_fix() {
-        update_option( 'knr_geo_robots_fix_active', '1' );
+        update_option( 'big_geo_robots_fix_active', '1' );
         // The actual hook is registered via settings-page.php after option is set
         return array(
             'success' => true,
@@ -273,7 +273,7 @@ class KNR_GEO_Robots_Audit {
      * Called from settings-page.php
      */
     public static function inject_ai_bots_filter( $output, $public ) {
-        if ( '1' !== get_option( 'knr_geo_robots_fix_active', '0' ) ) {
+        if ( '1' !== get_option( 'big_geo_robots_fix_active', '0' ) ) {
             return $output;
         }
         $ai_bots = array( 'GPTBot', 'ClaudeBot', 'PerplexityBot', 'Google-Extended', 'Amazonbot', 'cohere-ai' );
