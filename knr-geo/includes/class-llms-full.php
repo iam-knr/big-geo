@@ -1,167 +1,251 @@
 <?php
 /**
  * Big GEO - llms-full.txt Generator
- * Generates llms-full.txt with full post content as clean Markdown
+ * Generates physical llms-full.txt file with complete post content
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+	exit;
 }
 
 class BIG_GEO_LLMS_Full {
 
-    public function register_rewrite() {
-        add_rewrite_rule( '^llms-full\.txt$', 'index.php?big_geo_llms_full=1', 'top' );
-        add_filter( 'query_vars', array( $this, 'add_query_vars' ) );
-        add_action( 'template_redirect', array( $this, 'serve_file' ) );
-    }
-
-    public function add_query_vars( $vars ) {
-        $vars[] = 'big_geo_llms_full';
-        return $vars;
-    }
-
-    public function serve_file() {
-        if ( ! get_query_var( 'big_geo_llms_full' ) ) {
-            return;
-        }
-        if ( get_option( 'big_geo_llms_full_enabled', '0' ) !== '1' ) {
-            wp_die( 'llms-full.txt is disabled.', '', array( 'response' => 404 ) );
-        }
-        $content = $this->generate();
-        header( 'Content-Type: text/plain; charset=utf-8' );
-        header( 'X-Robots-Tag: noindex' );
-        echo $content;
-        exit;
-    }
-
-    /**
-     * Generate llms-full.txt content
-     *
-     * @return string
-     */
-    public function generate() {
-        $cached = get_transient( 'big_geo_llms_full_cache' );
-        if ( false !== $cached ) {
-            return $cached;
-        }
-
-        $lines = array();
-
-        $site_name = get_bloginfo( 'name' );
-        $site_desc = get_option( 'big_geo_site_description', '' );
-        if ( empty( $site_desc ) ) {
-            $site_desc = get_bloginfo( 'description' );
-        }
-
-        $lines[] = '# ' . $site_name;
-        if ( ! empty( $site_desc ) ) {
-            $lines[] = '> ' . $site_desc;
-        }
-        $lines[] = '';
-
-        $post_types = get_option( 'big_geo_post_types', array( 'post', 'page' ) );
-        if ( ! is_array( $post_types ) ) {
-            $post_types = array( 'post', 'page' );
-        }
-
-        $strip_shortcodes = get_option( 'big_geo_strip_shortcodes', '1' ) === '1';
-
-        foreach ( $post_types as $post_type ) {
-            $posts = get_posts( array(
-                'post_type'      => $post_type,
-                'post_status'    => 'publish',
-                'posts_per_page' => -1,
-                'orderby'        => 'date',
-                'order'          => 'DESC',
-            ) );
-
-            if ( empty( $posts ) ) {
-                continue;
-            }
-
-            foreach ( $posts as $post ) {
-                $url      = get_permalink( $post->ID );
-                $date     = get_the_date( 'Y-m-d', $post->ID );
-                $cats     = wp_get_post_categories( $post->ID, array( 'fields' => 'names' ) );
-                $cat_str  = is_array( $cats ) ? implode( ', ', $cats ) : '';
-                $excerpt  = has_excerpt( $post->ID ) ? get_the_excerpt( $post ) : '';
-
-                // Post header
-                $lines[] = '---';
-                $lines[] = '# ' . $post->post_title;
-                $lines[] = 'URL: ' . $url;
-                $lines[] = 'Date: ' . $date;
-                if ( ! empty( $cat_str ) ) {
-                    $lines[] = 'Category: ' . $cat_str;
-                }
-                if ( ! empty( $excerpt ) ) {
-                    $lines[] = 'Excerpt: ' . $excerpt;
-                }
-                $lines[] = '';
-
-                // Post content
-                $content = $post->post_content;
-
-                // Strip shortcodes
-                if ( $strip_shortcodes ) {
-                    $content = strip_shortcodes( $content );
-                }
-
-                // Strip HTML and clean up
-                $content = $this->strip_to_markdown( $content );
-
-                $lines[] = $content;
-                $lines[] = '';
-            }
-        }
-
-        $output = implode( "\n", $lines );
-        set_transient( 'big_geo_llms_full_cache', $output, HOUR_IN_SECONDS );
-
-        return $output;
-    }
-
-    /**
-     * Strip HTML and convert basic elements to Markdown-friendly plain text
-     *
-     * @param string $html
-     * @return string
-     */
-    private function strip_to_markdown( $html ) {
-        // Apply WordPress content filters (handles blocks, etc)
-        $html = apply_filters( 'the_content', $html );
-
-        // Remove script and style blocks
-        $html = preg_replace( '#<script[^>]*>.*?</script>#si', '', $html );
-        $html = preg_replace( '#<style[^>]*>.*?</style>#si', '', $html );
-
-        // Convert headings
-        $html = preg_replace( '#<h1[^>]*>(.*?)</h1>#si', "# $1\n", $html );
-        $html = preg_replace( '#<h2[^>]*>(.*?)</h2>#si', "## $1\n", $html );
-        $html = preg_replace( '#<h3[^>]*>(.*?)</h3>#si', "### $1\n", $html );
-        $html = preg_replace( '#<h[4-6][^>]*>(.*?)</h[4-6]>#si', "#### $1\n", $html );
-
-        // Convert paragraphs
-        $html = preg_replace( '#<p[^>]*>(.*?)</p>#si', "$1\n\n", $html );
-
-        // Convert list items
-        $html = preg_replace( '#<li[^>]*>(.*?)</li>#si', "- $1\n", $html );
-
-        // Convert line breaks
-        $html = preg_replace( '#<br\s*/?>\s*#si', "\n", $html );
-
-        // Strip remaining HTML tags
-        $html = wp_strip_all_tags( $html );
-
-        // Decode HTML entities
-        $html = html_entity_decode( $html, ENT_QUOTES, 'UTF-8' );
-
-        // Clean up excessive whitespace
-        $html = preg_replace( '#[ \t]+#', ' ', $html );
-        $html = preg_replace( '#\n{3,}#', "\n\n", $html );
-        $html = trim( $html );
-
-        return $html;
-    }
+	/**
+	 * Generate llms-full.txt content
+	 */
+	public function generate_content() {
+		$post_types = get_option( 'big_geo_post_types', array( 'post', 'page' ) );
+		$description = get_option( 'big_geo_site_description', '' );
+		$strip_shortcodes = get_option( 'big_geo_strip_shortcodes', '1' );
+		
+		$output = "";
+		
+		// Add custom intro description
+		if ( ! empty( $description ) ) {
+			$output .= "# " . get_bloginfo( 'name' ) . "\n";
+			$output .= $description . "\n\n";
+		}
+		
+		// Add site URL
+		$output .= "Site: " . home_url() . "\n";
+		$output .= "Generated: " . current_time( 'Y-m-d H:i:s' ) . "\n\n";
+		$output .= "---\n\n";
+		
+		// Generate full content by post type
+		foreach ( $post_types as $post_type ) {
+			$posts = $this->get_posts_by_type( $post_type );
+			
+			if ( ! empty( $posts ) ) {
+				$post_type_obj = get_post_type_object( $post_type );
+				$output .= "# " . $post_type_obj->labels->name . "\n\n";
+				
+				foreach ( $posts as $post ) {
+					$output .= $this->format_post_content( $post, $strip_shortcodes );
+				}
+			}
+		}
+		
+		return $output;
+	}
+	
+	/**
+	 * Format single post content
+	 */
+	private function format_post_content( $post, $strip_shortcodes ) {
+		$output = "";
+		
+		// Post title
+		$output .= "## " . $post->post_title . "\n\n";
+		
+		// Meta information
+		$output .= "**URL:** " . get_permalink( $post->ID ) . "\n";
+		$output .= "**Published:** " . get_the_date( 'Y-m-d', $post->ID ) . "\n";
+		
+		// Categories/Taxonomy
+		$categories = get_the_category( $post->ID );
+		if ( ! empty( $categories ) ) {
+			$cat_names = array_map( function( $cat ) {
+				return $cat->name;
+			}, $categories );
+			$output .= "**Categories:** " . implode( ', ', $cat_names ) . "\n";
+		}
+		
+		// Excerpt
+		if ( ! empty( $post->post_excerpt ) ) {
+			$output .= "**Excerpt:** " . $post->post_excerpt . "\n";
+		}
+		
+		$output .= "\n";
+		
+		// Post content - stripped and cleaned
+		$content = $post->post_content;
+		
+		// Strip shortcodes if enabled
+		if ( $strip_shortcodes === '1' ) {
+			$content = strip_shortcodes( $content );
+		}
+		
+		// Convert to markdown-friendly text
+		$content = $this->html_to_markdown( $content );
+		
+		$output .= $content . "\n\n";
+		$output .= "---\n\n";
+		
+		return $output;
+	}
+	
+	/**
+	 * Convert HTML to clean markdown-style text
+	 */
+	private function html_to_markdown( $html ) {
+		// Remove script and style tags
+		$html = preg_replace( '/<script\b[^>]*>.*?<\/script>/is', '', $html );
+		$html = preg_replace( '/<style\b[^>]*>.*?<\/style>/is', '', $html );
+		
+		// Remove navigation, ads, and common unwanted elements
+		$html = preg_replace( '/<nav\b[^>]*>.*?<\/nav>/is', '', $html );
+		$html = preg_replace( '/<aside\b[^>]*>.*?<\/aside>/is', '', $html );
+		
+		// Convert headings
+		$html = preg_replace( '/<h1[^>]*>(.*?)<\/h1>/is', "\n### $1\n", $html );
+		$html = preg_replace( '/<h2[^>]*>(.*?)<\/h2>/is', "\n#### $1\n", $html );
+		$html = preg_replace( '/<h3[^>]*>(.*?)<\/h3>/is', "\n##### $1\n", $html );
+		
+		// Convert lists
+		$html = preg_replace( '/<li[^>]*>(.*?)<\/li>/is', "- $1\n", $html );
+		
+		// Convert paragraphs to double newlines
+		$html = preg_replace( '/<p[^>]*>(.*?)<\/p>/is', "$1\n\n", $html );
+		
+		// Convert breaks
+		$html = preg_replace( '/<br\s*\/?>/is', "\n", $html );
+		
+		// Strip remaining HTML tags
+		$html = wp_strip_all_tags( $html );
+		
+		// Decode HTML entities
+		$html = html_entity_decode( $html, ENT_QUOTES, 'UTF-8' );
+		
+		// Clean up excessive whitespace
+		$html = preg_replace( '/\n{3,}/', "\n\n", $html );
+		$html = preg_replace( '/[^\S\n]+/', ' ', $html );
+		
+		return trim( $html );
+	}
+	
+	/**
+	 * Get posts by post type
+	 */
+	private function get_posts_by_type( $post_type ) {
+		$args = array(
+			'post_type' => $post_type,
+			'post_status' => 'publish',
+			'posts_per_page' => -1,
+			'orderby' => 'date',
+			'order' => 'DESC',
+		);
+		
+		$query = new WP_Query( $args );
+		$posts = array();
+		
+		if ( $query->have_posts() ) {
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				
+				// Skip if noindex
+				if ( ! $this->is_noindex( get_the_ID() ) ) {
+					$posts[] = get_post();
+				}
+			}
+			wp_reset_postdata();
+		}
+		
+		return $posts;
+	}
+	
+	/**
+	 * Check if post is marked noindex
+	 */
+	private function is_noindex( $post_id ) {
+		// Check Yoast SEO
+		if ( defined( 'WPSEO_VERSION' ) ) {
+			$noindex = get_post_meta( $post_id, '_yoast_wpseo_meta-robots-noindex', true );
+			if ( $noindex === '1' ) {
+				return true;
+			}
+		}
+		
+		// Check Rank Math
+		if ( class_exists( 'RankMath' ) ) {
+			$robots = get_post_meta( $post_id, 'rank_math_robots', true );
+			if ( is_array( $robots ) && in_array( 'noindex', $robots ) ) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Write llms-full.txt file to WordPress root
+	 */
+	public function write_file() {
+		$content = $this->generate_content();
+		$file_path = ABSPATH . 'llms-full.txt';
+		
+		// Use WP_Filesystem
+		global $wp_filesystem;
+		
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		
+		WP_Filesystem();
+		
+		if ( ! $wp_filesystem ) {
+			return array(
+				'success' => false,
+				'message' => 'Could not initialize WP_Filesystem'
+			);
+		}
+		
+		// Write file
+		$result = $wp_filesystem->put_contents(
+			$file_path,
+			$content,
+			FS_CHMOD_FILE
+		);
+		
+		if ( $result ) {
+			update_option( 'big_geo_llms_full_generated', current_time( 'mysql' ) );
+			
+			return array(
+				'success' => true,
+				'message' => 'llms-full.txt file generated successfully!',
+				'file_url' => home_url( '/llms-full.txt' )
+			);
+		} else {
+			return array(
+				'success' => false,
+				'message' => 'Failed to write llms-full.txt file. Check file permissions.'
+			);
+		}
+	}
+	
+	/**
+	 * Check if llms-full.txt file exists
+	 */
+	public function file_exists() {
+		return file_exists( ABSPATH . 'llms-full.txt' );
+	}
+	
+	/**
+	 * Get file last modified time
+	 */
+	public function get_file_time() {
+		if ( $this->file_exists() ) {
+			return filemtime( ABSPATH . 'llms-full.txt' );
+		}
+		return false;
+	}
 }
