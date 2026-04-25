@@ -21,10 +21,11 @@ function big_geo_admin_menu() {
 }
 
 // Register robots_txt filter if virtual fix is active
-if ( get_option( 'big_geo_robots_fix_active', '0' ) === '1' ) {
-    add_filter( 'robots_txt', 'BIG_GEO_Robots_Audit::inject_ai_bots_filter', 99, 2 );
-}
-
+add_action( 'init', function() {
+    if ( get_option( 'big_geo_robots_fix_active', '0' ) === '1' ) {
+        add_filter( 'robots_txt', 'BIG_GEO_Robots_Audit::inject_ai_bots_filter', 99, 2 );
+    }
+} );
 // Save settings
 add_action( 'admin_init', 'big_geo_save_settings' );
 function big_geo_save_settings() {
