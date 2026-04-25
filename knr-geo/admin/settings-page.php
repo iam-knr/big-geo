@@ -1,331 +1,237 @@
 <?php
 /**
- * Big GEO - Admin Settings Page
- * Tabbed interface for managing llms.txt, llms-full.txt, and AI Crawler Audit
+ * Settings Page UI
+ *
+ * @package Big_GEO
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Add admin menu
-add_action( 'admin_menu', 'big_geo_admin_menu' );
-function big_geo_admin_menu() {
-	add_menu_page(
-		'Big GEO Settings',
-		'Big GEO',
-		'manage_options',
-		'knr-geo',
-		'big_geo_settings_page',
-		'dashicons-admin-site-alt3',
-		80
-	);
-}
-
 /**
- * Settings Page UI
+ * Render the main admin settings page.
  */
 function big_geo_settings_page() {
-	// Initialize classes
-	$audit = new BIG_GEO_Robots_Audit();
-	$llms = new BIG_GEO_LLMS_Txt();
-	$llms_full = new BIG_GEO_LLMS_Full();
-	
-	// Handle settings save
-	if ( isset( $_POST['big_geo_save_settings'] ) && check_admin_referer( 'big_geo_settings_nonce' ) ) {
-		big_geo_save_settings();
-	}
-	
-	// Get current tab
-	$active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( $_GET['tab'] ) : 'dashboard';
+	// Initialize class objects for status display.
+	$audit    = new BIG_GEO_Robots_Audit();
+	$llms     = new BIG_GEO_LLMS_Txt( get_option( 'big_geo_settings', array() ) );
+	$llms_full = new BIG_GEO_LLMS_Full( get_option( 'big_geo_settings', array() ) );
+
+	// Determine current tab.
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'dashboard';
+
 	?>
-	<div class="wrap big-geo-settings">
-		<h1><span class="dashicons dashicons-admin-settings"></span> Big GEO - AI Discovery Manager</h1>
-		
-		<?php settings_errors( 'big_geo_messages' ); ?>
-		
+	<div class="wrap big-geo-wrap">
+		<div class="big-geo-header">
+			<span class="plugin-logo">&#127758;</span>
+			<h1><?php esc_html_e( 'Big GEO', 'knr-geo' ); ?></h1>
+			<span class="version-badge">v<?php echo esc_html( BIG_GEO_VERSION ); ?></span>
+		</div>
+
 		<nav class="nav-tab-wrapper">
-			<a href="?page=knr-geo&tab=dashboard" class="nav-tab <?php echo $active_tab == 'dashboard' ? 'nav-tab-active' : ''; ?>">Dashboard</a>
-			<a href="?page=knr-geo&tab=llms-txt" class="nav-tab <?php echo $active_tab == 'llms-txt' ? 'nav-tab-active' : ''; ?>">llms.txt</a>
-			<a href="?page=knr-geo&tab=llms-full" class="nav-tab <?php echo $active_tab == 'llms-full' ? 'nav-tab-active' : ''; ?>">llms-full.txt</a>
-			<a href="?page=knr-geo&tab=ai-crawlers" class="nav-tab <?php echo $active_tab == 'ai-crawlers' ? 'nav-tab-active' : ''; ?>">AI Crawler Audit</a>
+			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=dashboard' ) ); ?>"
+			   class="nav-tab <?php echo 'dashboard' === $active_tab ? 'nav-tab-active' : ''; ?>">
+				<?php esc_html_e( 'Dashboard', 'knr-geo' ); ?>
+			</a>
+			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=robots' ) ); ?>"
+			   class="nav-tab <?php echo 'robots' === $active_tab ? 'nav-tab-active' : ''; ?>">
+				<?php esc_html_e( 'Robots.txt', 'knr-geo' ); ?>
+			</a>
+			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=llms' ) ); ?>"
+			   class="nav-tab <?php echo 'llms' === $active_tab ? 'nav-tab-active' : ''; ?>">
+				<?php esc_html_e( 'LLMS.txt', 'knr-geo' ); ?>
+			</a>
+			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=llms-full' ) ); ?>"
+			   class="nav-tab <?php echo 'llms-full' === $active_tab ? 'nav-tab-active' : ''; ?>">
+				<?php esc_html_e( 'LLMS-Full.txt', 'knr-geo' ); ?>
+			</a>
+			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=settings' ) ); ?>"
+			   class="nav-tab <?php echo 'settings' === $active_tab ? 'nav-tab-active' : ''; ?>">
+				<?php esc_html_e( 'Settings', 'knr-geo' ); ?>
+			</a>
 		</nav>
-		
-		<div class="tab-content mt-20">
-			<?php
-			switch ( $active_tab ) {
-				case 'dashboard':
-					big_geo_render_dashboard( $llms, $llms_full, $audit );
-					break;
-				case 'llms-txt':
-					big_geo_render_llms_txt_tab( $llms );
-					break;
-				case 'llms-full':
-					big_geo_render_llms_full_tab( $llms_full );
-					break;
-				case 'ai-crawlers':
-					big_geo_render_ai_crawlers_tab( $audit );
-					break;
-			}
-			?>
-		</div>
-	</div>
-	
-	<script>
-	jQuery(document).ready(function($) {
-		// AJAX for Preview
-		$('.big-geo-preview-btn').on('click', function(e) {
-			e.preventDefault();
-			const btn = $(this);
-			const target = btn.data('target');
-			const type = btn.data('type');
-			const nonce = '<?php echo wp_create_nonce("big_geo_generate"); ?>';
-			
-			btn.addClass('updating-message').prop('disabled', true);
-			
-			$.post(ajaxurl, {
-				action: 'big_geo_preview_' + type,
-				nonce: nonce
-			}, function(response) {
-				btn.removeClass('updating-message').prop('disabled', false);
-				if (response.success) {
-					$('#' + target).val(response.data.content).show();
-				}
-			});
-		});
-		
-		// AJAX for Generate
-		$('.big-geo-generate-btn').on('click', function(e) {
-			e.preventDefault();
-			const btn = $(this);
-			const type = btn.data('type');
-			const nonce = '<?php echo wp_create_nonce("big_geo_generate"); ?>';
-			
-			if (!confirm('This will write a physical file to your site root. Proceed?')) return;
-			
-			btn.addClass('updating-message').prop('disabled', true);
-			
-			$.post(ajaxurl, {
-				action: 'big_geo_generate_' + type,
-				nonce: nonce
-			}, function(response) {
-				btn.removeClass('updating-message').prop('disabled', false);
-				alert(response.data.message);
-				if (response.success) location.reload();
-			});
-		});
-	});
-	</script>
-	<?php
-}
 
-/**
- * Render Dashboard Tab
- */
-function big_geo_render_dashboard( $llms, $llms_full, $audit ) {
-	?>
-	<div class="big-geo-dashboard-grid">
-		<div class="card status-card">
-			<h3>llms.txt Status</h3>
-			<p>
-				<?php if ( $llms->file_exists() ) : ?>
-					<span class="status-badge success">Active</span>
-					<br><small>Last Generated: <?php echo date( 'Y-m-d H:i', $llms->get_file_time() ); ?></small>
-				<?php else : ?>
-					<span class="status-badge error">Not Found</span>
-				<?php endif; ?>
-			</p>
-			<a href="?page=knr-geo&tab=llms-txt" class="button">Manage llms.txt</a>
-		</div>
-		
-		<div class="card status-card">
-			<h3>llms-full.txt Status</h3>
-			<p>
-				<?php if ( $llms_full->file_exists() ) : ?>
-					<span class="status-badge success">Active</span>
-					<br><small>Last Generated: <?php echo date( 'Y-m-d H:i', $llms_full->get_file_time() ); ?></small>
-				<?php else : ?>
-					<span class="status-badge error">Not Found</span>
-				<?php endif; ?>
-			</p>
-			<a href="?page=knr-geo&tab=llms-full" class="button">Manage llms-full.txt</a>
-		</div>
-		
-		<div class="card status-card">
-			<h3>AI Crawler Audit</h3>
-			<?php $report = $audit->run_audit(); ?>
-			<p>
-				<span class="status-badge <?php echo ! $report['all_allowed'] ? 'warning' : 'success'; ?>">
-					<?php echo count( array_filter( $report['bots'], function($b){ return $b['status'] === 'allowed'; } ) ); ?> Bots Allowed
-				</span>
-			</p>
-			<a href="?page=knr-geo&tab=ai-crawlers" class="button">View Audit</a>
-		</div>
-	</div>
-	<?php
-}
 
-/**
- * Render llms.txt Tab
- */
-function big_geo_render_llms_txt_tab( $llms ) {
-	$post_types = get_post_types( array( 'public' => true ), 'objects' );
-	$selected_types = get_option( 'big_geo_post_types', array( 'post', 'page' ) );
-	?>
-	<div class="card">
-		<h2>Module 1: llms.txt Configuration</h2>
-		<form method="post">
-			<?php wp_nonce_field( 'big_geo_settings_nonce' ); ?>
-			<table class="form-table">
-				<tr>
-					<th>Include Post Types</th>
-					<td>
-						<?php foreach ( $post_types as $type ) : ?>
-							<label>
-								<input type="checkbox" name="big_geo_post_types[]" value="<?php echo $type->name; ?>" <?php checked( in_array( $type->name, $selected_types ) ); ?>>
-								<?php echo $type->label; ?>
-							</label><br>
-											<?php endforeach; ?>
-					</td>
-				</tr>
-				<tr>
-					<th>Site Description (Markdown)</th>
-					<td>
-						<textarea name="big_geo_site_description" rows="5" class="large-text"><?php echo esc_textarea( get_option( 'big_geo_site_description' ) ); ?></textarea>
-						<p class="description">Add an intro description about your site for AI models.</p>
-					</td>
-				</tr>
-			</table>
-			<p class="submit">
-				<input type="submit" name="big_geo_save_settings" class="button button-primary" value="Save Settings">
-			</p>
-		</form>
-		
-		<hr>
-		
-		<h3>Generation Control</h3>
-		<p>
-			<button class="button big-geo-preview-btn" data-type="llms_txt" data-target="llms-txt-preview">Preview Content</button>
-			<button class="button button-primary big-geo-generate-btn" data-type="llms_txt">Generate physical llms.txt file</button>
-		</p>
-		<textarea id="llms-txt-preview" class="large-text code" rows="15" style="display:none;" readonly></textarea>
-	</div>
-	<?php
-}
+		<div class="big-geo-tab-content">
 
-/**
- * Render llms-full.txt Tab
- */
-function big_geo_render_llms_full_tab( $llms_full ) {
-	?>
-	<div class="card">
-		<h2>Module 2: llms-full.txt Configuration</h2>
-		<form method="post">
-			<?php wp_nonce_field( 'big_geo_settings_nonce' ); ?>
-			<table class="form-table">
-				<tr>
-					<th>Enable Full Content</th>
-					<td>
-						<label>
-							<input type="checkbox" name="big_geo_llms_full_enabled" value="1" <?php checked( get_option( 'big_geo_llms_full_enabled' ), '1' ); ?>>
-							Allow AI models to read full post content
-						</label>
-					</td>
-				</tr>
-				<tr>
-					<th>Content Cleaning</th>
-					<td>
-						<label>
-							<input type="checkbox" name="big_geo_strip_shortcodes" value="1" <?php checked( get_option( 'big_geo_strip_shortcodes' ), '1' ); ?>>
-							Strip WordPress shortcodes
-						</label>
-					</td>
-				</tr>
-			</table>
-			<p class="submit">
-				<input type="submit" name="big_geo_save_settings" class="button button-primary" value="Save Settings">
-			</p>
-		</form>
-		
-		<hr>
-		
-		<h3>Generation Control</h3>
-		<p>
-			<button class="button big-geo-preview-btn" data-type="llms_full" data-target="llms-full-preview">Preview Content</button>
-			<button class="button button-primary big-geo-generate-btn" data-type="llms_full">Generate physical llms-full.txt file</button>
-		</p>
-		<textarea id="llms-full-preview" class="large-text code" rows="15" style="display:none;" readonly></textarea>
-	</div>
-	<?php
-}
 
-/**
- * Render AI Crawlers Tab
- */
-function big_geo_render_ai_crawlers_tab( $audit ) {
-	$report = $audit->run_audit();
-	?>
-	<div class="card">
-		<h2>Module 3: AI Crawler Audit</h2>
-		<table class="wp-list-table widefat fixed striped">
-			<thead>
-				<tr>
-					<th>AI Bot Name</th>
-					<th>Organization</th>
-					<th>Status</th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ( $report['bots'] as $bot => $data ) : ?>
-					<tr>
-						<td><strong><?php echo esc_html( $bot ); ?></strong></td>
-						<td><?php echo esc_html( $data['label'] ); ?></td>
-						<td>
-							<?php if ( $data['status'] === 'allowed' ) : ?>
-								<span class="status-badge success">Allowed</span>
+			<?php if ( 'dashboard' === $active_tab ) : ?>
+			<div class="big-geo-dashboard-grid">
+
+				<div class="big-geo-section status-card">
+					<h3><?php esc_html_e( 'AI Crawlers Status', 'knr-geo' ); ?></h3>
+					<p><?php esc_html_e( 'Check if major AI crawlers can access your site via robots.txt.', 'knr-geo' ); ?></p>
+					<div class="big-geo-actions">
+						<button id="big-geo-run-audit" class="button button-primary">
+							<?php esc_html_e( 'Run AI Crawlers Audit', 'knr-geo' ); ?>
+						</button>
+					</div>
+					<div id="big-geo-audit-results" class="big-geo-audit-table-wrap">
+						<?php echo wp_kses_post( $audit->get_audit_html() ); ?>
+					</div>
+				</div>
+
+				<div class="big-geo-section status-card">
+					<h3><?php esc_html_e( 'LLMS Files', 'knr-geo' ); ?></h3>
+					<p><?php esc_html_e( 'Generate llms.txt and llms-full.txt for AI language models.', 'knr-geo' ); ?></p>
+					<?php
+					$llms_exists = $llms->file_exists();
+					$llms_full_exists = $llms_full->file_exists();
+					?>
+					<ul style="margin:0;padding:0 0 0 1.2em;">
+						<li>
+							<strong>llms.txt</strong>:
+							<?php if ( $llms_exists ) : ?>
+								<span class="status-badge allowed"><?php esc_html_e( 'Exists', 'knr-geo' ); ?></span>
+								<small><?php echo esc_html( $llms->get_file_time() ); ?></small>
 							<?php else : ?>
-								<span class="status-badge error">Blocked</span>
+								<span class="status-badge blocked"><?php esc_html_e( 'Not generated', 'knr-geo' ); ?></span>
 							<?php endif; ?>
-						</td>
-					</tr>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
-		
-		<hr>
-		
-		<h3>Fix AI Discovery (robots.txt)</h3>
-		<?php if ( file_exists( ABSPATH . 'robots.txt' ) ) : ?>
-			<div class="notice notice-warning inline">
-				<p><strong>Physical robots.txt detected!</strong> WordPress filter is bypassed. You must update the file manually or use the button below if writable.</p>
+						</li>
+						<li>
+							<strong>llms-full.txt</strong>:
+							<?php if ( $llms_full_exists ) : ?>
+								<span class="status-badge allowed"><?php esc_html_e( 'Exists', 'knr-geo' ); ?></span>
+								<small><?php echo esc_html( $llms_full->get_file_time() ); ?></small>
+							<?php else : ?>
+								<span class="status-badge blocked"><?php esc_html_e( 'Not generated', 'knr-geo' ); ?></span>
+							<?php endif; ?>
+						</li>
+					</ul>
+				</div>
+
+			</div><!-- .big-geo-dashboard-grid -->
+			<?php endif; ?>
+
+			<?php if ( 'robots' === $active_tab ) : ?>
+			<div class="big-geo-section">
+				<h2><?php esc_html_e( 'AI Crawler Discovery (robots.txt)', 'knr-geo' ); ?></h2>
+				<p><?php esc_html_e( 'Ensure AI bots like GPTBot, ClaudeBot, PerplexityBot, and others can crawl your site. Big GEO audits your robots.txt and helps you fix any issues.', 'knr-geo' ); ?></p>
+
+				<?php
+				$robots_type = $audit->detect_tier();
+				if ( 'physical' === $robots_type ) :
+				?>
+				<div class="big-geo-notice notice-warning">
+					<?php esc_html_e( 'A physical robots.txt file exists in your site root. You can view/edit it below and write updated contents.', 'knr-geo' ); ?>
+				</div>
+				<?php endif; ?>
+
+				<div class="big-geo-actions">
+					<button id="big-geo-run-audit" class="button button-primary">
+						<?php esc_html_e( 'Run AI Crawlers Audit', 'knr-geo' ); ?>
+					</button>
+					<button id="big-geo-apply-fix" class="button button-secondary">
+						<?php esc_html_e( 'Apply Virtual Fix (WP Filter)', 'knr-geo' ); ?>
+					</button>
+				</div>
+				<div id="big-geo-audit-results" class="big-geo-audit-table-wrap" style="margin-top:16px;">
+					<p class="description"><?php esc_html_e( 'Click "Run AI Crawlers Audit" to check your robots.txt.', 'knr-geo' ); ?></p>
+				</div>
+
+				<hr style="margin:24px 0;">
+				<h3><?php esc_html_e( 'Write Physical robots.txt', 'knr-geo' ); ?></h3>
+				<p><?php esc_html_e( 'Optionally write a physical robots.txt file. The content below is pre-filled with AI-friendly rules.', 'knr-geo' ); ?></p>
+				<textarea id="big-geo-robots-content" class="big-geo-robots-editor" rows="12"><?php echo esc_textarea( $audit->generate_corrected_robots() ); ?></textarea>
+				<div class="big-geo-actions">
+					<button id="big-geo-write-robots" class="button button-primary">
+						<?php esc_html_e( 'Write Physical robots.txt', 'knr-geo' ); ?>
+					</button>
+				</div>
 			</div>
-		<?php else : ?>
-			<div class="notice notice-success inline">
-				<p>No physical robots.txt found. Using virtual robots.txt filter.</p>
+			<?php endif; ?>
+
+			<?php if ( 'llms' === $active_tab ) : ?>
+			<div class="big-geo-section">
+				<h2><?php esc_html_e( 'LLMS.txt Generator', 'knr-geo' ); ?></h2>
+				<p><?php esc_html_e( 'Generate a llms.txt file that helps AI language models understand your site structure, key pages, and important links.', 'knr-geo' ); ?></p>
+				<?php if ( $llms->file_exists() ) : ?>
+				<div class="big-geo-file-meta">
+					<span><strong><?php esc_html_e( 'File:', 'knr-geo' ); ?></strong> llms.txt</span>
+					<span><strong><?php esc_html_e( 'Last updated:', 'knr-geo' ); ?></strong> <?php echo esc_html( $llms->get_file_time() ); ?></span>
+					<span><a href="<?php echo esc_url( home_url( '/llms.txt' ) ); ?>" target="_blank"><?php esc_html_e( 'View file', 'knr-geo' ); ?></a></span>
+				</div>
+				<?php else : ?>
+				<div class="big-geo-notice notice-warning"><?php esc_html_e( 'llms.txt has not been generated yet.', 'knr-geo' ); ?></div>
+				<?php endif; ?>
+				<div class="big-geo-actions" style="margin-top:16px;">
+					<button id="big-geo-generate-llms" class="button button-primary">
+						<?php esc_html_e( 'Generate & Save llms.txt', 'knr-geo' ); ?>
+					</button>
+					<?php if ( $llms->file_exists() ) : ?>
+					<a id="big-geo-llms-link" href="<?php echo esc_url( home_url( '/llms.txt' ) ); ?>" class="button" target="_blank">
+						<?php esc_html_e( 'View llms.txt', 'knr-geo' ); ?>
+					</a>
+					<?php endif; ?>
+				</div>
+				<div id="big-geo-llms-preview" class="big-geo-preview-box" style="display:none;"></div>
 			</div>
-		<?php endif; ?>
-		
-		<p>
-			<button class="button button-primary" onclick="alert('Applying fix...')">Update robots.txt for AI</button>
-		</p>
-	</div>
+			<?php endif; ?>
+
+			<?php if ( 'llms-full' === $active_tab ) : ?>
+			<div class="big-geo-section">
+				<h2><?php esc_html_e( 'LLMS-Full.txt Generator', 'knr-geo' ); ?></h2>
+				<p><?php esc_html_e( 'Generate a llms-full.txt file containing full content from your published posts and pages. This allows AI models to deeply understand your site content.', 'knr-geo' ); ?></p>
+				<?php if ( $llms_full->file_exists() ) : ?>
+				<div class="big-geo-file-meta">
+					<span><strong><?php esc_html_e( 'File:', 'knr-geo' ); ?></strong> llms-full.txt</span>
+					<span><strong><?php esc_html_e( 'Last updated:', 'knr-geo' ); ?></strong> <?php echo esc_html( $llms_full->get_file_time() ); ?></span>
+					<span><a href="<?php echo esc_url( home_url( '/llms-full.txt' ) ); ?>" target="_blank"><?php esc_html_e( 'View file', 'knr-geo' ); ?></a></span>
+				</div>
+				<?php else : ?>
+				<div class="big-geo-notice notice-warning"><?php esc_html_e( 'llms-full.txt has not been generated yet.', 'knr-geo' ); ?></div>
+				<?php endif; ?>
+				<div class="big-geo-actions" style="margin-top:16px;">
+					<button id="big-geo-preview-llms-full" class="button">
+						<?php esc_html_e( 'Preview Content', 'knr-geo' ); ?>
+					</button>
+					<button id="big-geo-generate-llms-full" class="button button-primary">
+						<?php esc_html_e( 'Generate & Save llms-full.txt', 'knr-geo' ); ?>
+					</button>
+					<?php if ( $llms_full->file_exists() ) : ?>
+					<a id="big-geo-llms-full-link" href="<?php echo esc_url( home_url( '/llms-full.txt' ) ); ?>" class="button" target="_blank">
+						<?php esc_html_e( 'View llms-full.txt', 'knr-geo' ); ?>
+					</a>
+					<?php endif; ?>
+				</div>
+				<div id="big-geo-llms-full-preview" class="big-geo-preview-box" style="display:none;"></div>
+			</div>
+			<?php endif; ?>
+
+			<?php if ( 'settings' === $active_tab ) : ?>
+			<div class="big-geo-section">
+				<h2><?php esc_html_e( 'Plugin Settings', 'knr-geo' ); ?></h2>
+				<form method="post" action="options.php">
+					<?php
+					settings_fields( 'big_geo_settings_group' );
+					do_settings_sections( 'big-geo' );
+					submit_button();
+					?>
+				</form>
+			</div>
+			<?php endif; ?>
+
+		</div><!-- .big-geo-tab-content -->
+	</div><!-- .big-geo-wrap -->
 	<?php
 }
 
 /**
- * Save Settings Logic
+ * Save plugin settings.
  */
 function big_geo_save_settings() {
-	if ( isset( $_POST['big_geo_post_types'] ) ) {
-		update_option( 'big_geo_post_types', array_map( 'sanitize_text_field', $_POST['big_geo_post_types'] ) );
+	check_ajax_referer( 'big_geo_nonce', 'nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( array( 'message' => 'Unauthorized' ) );
 	}
-	
-	if ( isset( $_POST['big_geo_site_description'] ) ) {
-		update_option( 'big_geo_site_description', sanitize_textarea_field( $_POST['big_geo_site_description'] ) );
+	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+	$settings = isset( $_POST['settings'] ) ? (array) $_POST['settings'] : array();
+	$clean = array();
+	foreach ( $settings as $key => $val ) {
+		$clean[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $val ) );
 	}
-	
-	update_option( 'big_geo_llms_full_enabled', isset( $_POST['big_geo_llms_full_enabled'] ) ? '1' : '0' );
-	update_option( 'big_geo_strip_shortcodes', isset( $_POST['big_geo_strip_shortcodes'] ) ? '1' : '0' );
-	
-	add_settings_error( 'big_geo_messages', 'big_geo_saved', 'Settings saved successfully!', 'updated' );
+	update_option( 'big_geo_settings', $clean );
+	wp_send_json_success( array( 'message' => 'Settings saved.' ) );
 }

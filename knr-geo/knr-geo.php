@@ -158,3 +158,46 @@ function big_geo_ajax_write_robots() {
     $audit = new BIG_GEO_Robots_Audit();
     wp_send_json_success( $audit->write_physical_robots() );
 }
+// AJAX: Generate llms.txt file
+add_action( 'wp_ajax_big_geo_generate_llms', 'big_geo_ajax_generate_llms' );
+function big_geo_ajax_generate_llms() {
+	check_ajax_referer( 'big_geo_nonce', 'nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( array( 'message' => 'Unauthorized' ) );
+	}
+	$options = get_option( 'big_geo_settings', array() );
+	$llms = new BIG_GEO_LLMS_Txt( $options );
+	$result = $llms->write_file();
+	if ( is_wp_error( $result ) ) {
+		wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+	}
+	$preview = $llms->generate_content();
+	$file_url = home_url( '/llms.txt' );
+	wp_send_json_success( array(
+		'message'  => 'llms.txt generated and saved successfully.',
+		'preview'  => substr( $preview, 0, 500 ),
+		'file_url' => $file_url,
+	) );
+}
+
+// AJAX: Generate llms-full.txt file
+add_action( 'wp_ajax_big_geo_generate_llms_full', 'big_geo_ajax_generate_llms_full' );
+function big_geo_ajax_generate_llms_full() {
+	check_ajax_referer( 'big_geo_nonce', 'nonce' );
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( array( 'message' => 'Unauthorized' ) );
+	}
+	$options = get_option( 'big_geo_settings', array() );
+	$llms_full = new BIG_GEO_LLMS_Full( $options );
+	$result = $llms_full->write_file();
+	if ( is_wp_error( $result ) ) {
+		wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+	}
+	$preview = $llms_full->generate_content();
+	$file_url = home_url( '/llms-full.txt' );
+	wp_send_json_success( array(
+		'message'  => 'llms-full.txt generated and saved successfully.',
+		'preview'  => substr( $preview, 0, 500 ),
+		'file_url' => $file_url,
+	) );
+}
