@@ -227,7 +227,7 @@ function big_geo_save_settings() {
 		wp_send_json_error( array( 'message' => 'Unauthorized' ) );
 	}
 	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-	$settings = isset( $_POST['settings'] ) ? (array) $_POST['settings'] : array();
+	$settings = isset( $_POST['settings'] ) ? (array) wp_unslash( $_POST['settings'] ) : array();
 	$clean = array();
 	foreach ( $settings as $key => $val ) {
 		$clean[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $val ) );

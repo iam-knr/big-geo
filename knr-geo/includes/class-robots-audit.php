@@ -194,7 +194,7 @@ class BIG_GEO_Robots_Audit {
         if ( function_exists( 'WP_Filesystem' ) ) {
             global $wp_filesystem;
             WP_Filesystem();
-            if ( $wp_filesystem && $wp_filesystem->is_writable( ABSPATH ) ) {
+            if ( $wp_filesystem && $wp_filesystem->is_writable( ABSPATH ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.filesystem_operations_is_writable
                 $wp_filesystem->put_contents( $robots_path, $new_content, FS_CHMOD_FILE );
                 return array(
                     'success'  => true,
@@ -205,7 +205,7 @@ class BIG_GEO_Robots_Audit {
         }
 
         // Fallback: file_put_contents
-        if ( is_writable( ABSPATH ) ) {
+        if ( is_writable( ABSPATH ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.filesystem_operations_is_writable
             file_put_contents( $robots_path, $new_content );
             return array(
                 'success' => true,

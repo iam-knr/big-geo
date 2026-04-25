@@ -81,7 +81,7 @@ function big_geo_generate_llms_full_ajax() {
 		wp_send_json_error( array( 'message' => 'Unauthorized' ) );
 	}
 	
-	$llms_full = new BIG_GEO_LLMS_Full();
+	$llms_full = new BIG_GEO_LLMS_Full(); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals
 	$result = $llms_full->write_file();
 	
 	if ( $result['success'] ) {
@@ -113,8 +113,8 @@ function big_geo_preview_llms_full_ajax() {
 		wp_send_json_error( array( 'message' => 'Unauthorized' ) );
 	}
 	
-	$llms_full = new BIG_GEO_LLMS_Full();
-	$content = $llms_full->generate_content();
+	$llms_full = new BIG_GEO_LLMS_Full(); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals
+	$content = $llms_full->generate_content(); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals
     	wp_send_json_success( array( 'content' => $content ) );
 }
 	
@@ -188,7 +188,7 @@ function big_geo_ajax_generate_llms_full() {
 		wp_send_json_error( array( 'message' => 'Unauthorized' ) );
 	}
 	$options = get_option( 'big_geo_settings', array() );
-	$llms_full = new BIG_GEO_LLMS_Full( $options );
+	$llms_full = new BIG_GEO_LLMS_Full( $options ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals
 	$result = $llms_full->write_file();
 	if ( is_wp_error( $result ) ) {
 		wp_send_json_error( array( 'message' => $result->get_error_message() ) );
