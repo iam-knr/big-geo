@@ -31,23 +31,23 @@ function big_geo_settings_page() {
 		</div>
 
 		<nav class="nav-tab-wrapper">
-			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=dashboard' ) ); ?>"
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=knr-geo&tab=dashboard' ) ); ?>"
 			   class="nav-tab <?php echo 'dashboard' === $active_tab ? 'nav-tab-active' : ''; ?>">
 				<?php esc_html_e( 'Dashboard', 'knr-geo' ); ?>
 			</a>
-			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=robots' ) ); ?>"
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=knr-geo&tab=robots' ) ); ?>"
 			   class="nav-tab <?php echo 'robots' === $active_tab ? 'nav-tab-active' : ''; ?>">
 				<?php esc_html_e( 'Robots.txt', 'knr-geo' ); ?>
 			</a>
-			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=llms' ) ); ?>"
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=knr-geo&tab=llms' ) ); ?>"
 			   class="nav-tab <?php echo 'llms' === $active_tab ? 'nav-tab-active' : ''; ?>">
 				<?php esc_html_e( 'LLMS.txt', 'knr-geo' ); ?>
 			</a>
-			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=llms-full' ) ); ?>"
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=knr-geo&tab=llms-full' ) ); ?>"
 			   class="nav-tab <?php echo 'llms-full' === $active_tab ? 'nav-tab-active' : ''; ?>">
 				<?php esc_html_e( 'LLMS-Full.txt', 'knr-geo' ); ?>
 			</a>
-			<a href="<?php echo esc_url( admin_url( 'options-general.php?page=big-geo&tab=settings' ) ); ?>"
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=knr-geo&tab=settings' ) ); ?>"
 			   class="nav-tab <?php echo 'settings' === $active_tab ? 'nav-tab-active' : ''; ?>">
 				<?php esc_html_e( 'Settings', 'knr-geo' ); ?>
 			</a>
@@ -151,7 +151,7 @@ function big_geo_settings_page() {
 				<div class="big-geo-file-meta">
 					<span><strong><?php esc_html_e( 'File:', 'knr-geo' ); ?></strong> llms.txt</span>
 					<span><strong><?php esc_html_e( 'Last updated:', 'knr-geo' ); ?></strong> <?php echo esc_html( $llms->get_file_time() ); ?></span>
-					<span><a href="<?php echo esc_url( home_url( '/llms.txt' ) ); ?>" target="_blank"><?php esc_html_e( 'View file', 'knr-geo' ); ?></a></span>
+					<span><a href="<?php echo esc_url( esc_url( home_url( '/llms.txt' ) ) ); ?>" target="_blank"><?php esc_html_e( 'View file', 'knr-geo' ); ?></a></span>
 				</div>
 				<?php else : ?>
 				<div class="big-geo-notice notice-warning"><?php esc_html_e( 'llms.txt has not been generated yet.', 'knr-geo' ); ?></div>
@@ -161,7 +161,7 @@ function big_geo_settings_page() {
 						<?php esc_html_e( 'Generate & Save llms.txt', 'knr-geo' ); ?>
 					</button>
 					<?php if ( $llms->file_exists() ) : ?>
-					<a id="big-geo-llms-link" href="<?php echo esc_url( home_url( '/llms.txt' ) ); ?>" class="button" target="_blank">
+					<a id="big-geo-llms-link" href="<?php echo esc_url( esc_url( home_url( '/llms.txt' ) ) ); ?>" class="button" target="_blank">
 						<?php esc_html_e( 'View llms.txt', 'knr-geo' ); ?>
 					</a>
 					<?php endif; ?>
@@ -178,7 +178,7 @@ function big_geo_settings_page() {
 				<div class="big-geo-file-meta">
 					<span><strong><?php esc_html_e( 'File:', 'knr-geo' ); ?></strong> llms-full.txt</span>
 					<span><strong><?php esc_html_e( 'Last updated:', 'knr-geo' ); ?></strong> <?php echo esc_html( $llms_full->get_file_time() ); ?></span>
-					<span><a href="<?php echo esc_url( home_url( '/llms-full.txt' ) ); ?>" target="_blank"><?php esc_html_e( 'View file', 'knr-geo' ); ?></a></span>
+					<span><a href="<?php echo esc_url( esc_url( home_url( '/llms-full.txt' ) ) ); ?>" target="_blank"><?php esc_html_e( 'View file', 'knr-geo' ); ?></a></span>
 				</div>
 				<?php else : ?>
 				<div class="big-geo-notice notice-warning"><?php esc_html_e( 'llms-full.txt has not been generated yet.', 'knr-geo' ); ?></div>
@@ -191,7 +191,7 @@ function big_geo_settings_page() {
 						<?php esc_html_e( 'Generate & Save llms-full.txt', 'knr-geo' ); ?>
 					</button>
 					<?php if ( $llms_full->file_exists() ) : ?>
-					<a id="big-geo-llms-full-link" href="<?php echo esc_url( home_url( '/llms-full.txt' ) ); ?>" class="button" target="_blank">
+					<a id="big-geo-llms-full-link" href="<?php echo esc_url( esc_url( home_url( '/llms-full.txt' ) ) ); ?>" class="button" target="_blank">
 						<?php esc_html_e( 'View llms-full.txt', 'knr-geo' ); ?>
 					</a>
 					<?php endif; ?>
