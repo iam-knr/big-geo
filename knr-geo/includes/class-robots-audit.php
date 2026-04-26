@@ -194,7 +194,7 @@ class BIG_GEO_Robots_Audit {
         if ( function_exists( 'WP_Filesystem' ) ) {
             global $wp_filesystem;
             WP_Filesystem();
-            if ( $wp_filesystem && $wp_filesystem->wp_is_writable( ABSPATH ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.filesystem_operations_is_writable
+            if ( $wp_filesystem && $wp_filesystem->is_writable( ABSPATH ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.filesystem_operations_is_writable
                 $wp_filesystem->put_contents( $robots_path, $new_content, FS_CHMOD_FILE );
                 return array(
                     'success'  => true,
