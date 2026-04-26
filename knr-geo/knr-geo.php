@@ -27,6 +27,21 @@ require_once BIG_GEO_PLUGIN_DIR . 'includes/class-robots-audit.php';
 require_once BIG_GEO_PLUGIN_DIR . 'admin/settings-page.php';
 // require_once BIG_GEO_PLUGIN_DIR . 'admin/dashboard-widget.php';
 
+
+// Register admin menu
+add_action( 'admin_menu', 'big_geo_admin_menu' );
+function big_geo_admin_menu() {
+	add_menu_page(
+		__( 'Big GEO', 'knr-geo' ),
+		__( 'Big GEO', 'knr-geo' ),
+		'manage_options',
+		'knr-geo',
+		'big_geo_settings_page',
+		'dashicons-admin-site-alt3',
+		80
+	);
+}
+
 register_activation_hook( __FILE__, 'big_geo_activate' );
 register_deactivation_hook( __FILE__, 'big_geo_deactivate' );
 

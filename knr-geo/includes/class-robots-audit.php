@@ -194,7 +194,7 @@ class BIG_GEO_Robots_Audit {
         if ( function_exists( 'WP_Filesystem' ) ) {
             global $wp_filesystem;
             WP_Filesystem();
-            if ( $wp_filesystem && $wp_filesystem->is_writable( ABSPATH ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.filesystem_operations_is_writable
+            if ( $wp_filesystem && $wp_filesystem->wp_is_writable( ABSPATH ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.filesystem_operations_is_writable
                 $wp_filesystem->put_contents( $robots_path, $new_content, FS_CHMOD_FILE );
                 return array(
                     'success'  => true,
@@ -205,7 +205,7 @@ class BIG_GEO_Robots_Audit {
         }
 
         // Fallback: file_put_contents
-        if ( is_writable( ABSPATH ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.filesystem_operations_is_writable
+        if ( wp_is_writable( ABSPATH ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.filesystem_operations_is_writable
             file_put_contents( $robots_path, $new_content );
             return array(
                 'success' => true,
@@ -256,7 +256,7 @@ class BIG_GEO_Robots_Audit {
      */
     private function get_wordpress_base_robots() {
         $robots = "User-agent: *\n";
-        $robots .= 'Disallow: ' . parse_url( admin_url(), PHP_URL_PATH ) . "\n";
+        $robots .= 'Disallow: ' . wp_parse_url( admin_url(), PHP_URL_PATH ) . "\n";
         $robots .= 'Sitemap: ' . get_sitemap_url( 'index' ) . "\n";
         return $robots;
     }
